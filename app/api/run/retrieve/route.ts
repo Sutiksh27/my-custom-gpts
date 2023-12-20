@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   if (!runId)
     return Response.json({ error: "No run id provided" }, { status: 400 });
 
-  const openai = new OpenAI();
+    const openai = new OpenAI();
 
   try {
     const run = await openai.beta.threads.runs.retrieve(threadId, runId);

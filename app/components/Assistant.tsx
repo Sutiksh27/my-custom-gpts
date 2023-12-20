@@ -1,6 +1,6 @@
 "use client";
 
-import { assistantAtom, fileAtom, messagesAtom } from "@/atom";
+import { assistantAtom, assistantsAtom, fileAtom, messagesAtom } from "@/atom";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { useAtom } from "jotai";
@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 function Assistant() {
   // Atom State
   const [assistant, setAssistant] = useAtom(assistantAtom);
+  const [assistants, setAssistants] = useAtom(assistantsAtom);
   const [, setMessages] = useAtom(messagesAtom);
   const [file] = useAtom(fileAtom);
 
@@ -19,6 +20,12 @@ function Assistant() {
   const [modifying, setModifying] = useState(false);
   const [listing, setListing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [choosing, setChoosing] = useState(false);
+
+  // Radio Button
+  const [selectedValue, setSelectedValue] = useState<string>("")
+  const options = assistants.map((a)=>({value: a.id, label: a.name}));
+  
 
   const handleCreate = async () => {
     setCreating(true);
@@ -41,6 +48,26 @@ function Assistant() {
       setCreating(false);
     }
   };
+
+  const handleChoose = async () => {
+    const assistantId = selectedValue;
+    setChoosing(true);
+    try {
+      const response = await axios.get<{assistant: Assistant}>(
+        `/api/assistant/choose?assistantId=${assistantId}`
+      );
+
+      const assistant = response.data.assistant;
+      console.log("Assistant: ", assistant);
+      setAssistant(assistant);
+      setChoosing(false);
+    } catch (error) {
+      console.log("error", error);
+      toast.error("Error creating assistant", { position: "bottom-center" });
+    } finally {
+      setCreating(false);
+    }
+  }
 
   const handleModify = async () => {
     setModifying(true);
@@ -70,9 +97,9 @@ function Assistant() {
         `/api/assistant/list`
       );
 
-      const assistants = response.data.assistants;
-      console.log("assistants", assistants);
-
+      const assistantList = response.data.assistants;
+      console.log("assistants", assistantList);
+      setAssistants(assistantList);
       toast.success(
         `Assistants:\n${assistants.map((a) => `${a.name + "\n"}`)} `,
         {
@@ -113,6 +140,9 @@ function Assistant() {
         <Button onClick={handleCreate}>
           {creating ? "Creating..." : "Create"}
         </Button>
+        <Button onClick={handleChoose}>
+          {choosing? "Choosing..." : "Choose"}
+        </Button>
         <Button onClick={handleModify} disabled={!assistant || !file}>
           {modifying ? "Modifying..." : "Modify"}
         </Button>
@@ -121,6 +151,22 @@ function Assistant() {
           {deleting ? "Deleting..." : "Delete"}
         </Button>
       </div>
+      {choosing? (<div>
+        {options.map((option) => (
+          <li key={option.value}>
+          <label>
+            <input
+              type="radio"
+              name="radiogroup" // ensure consistent group name
+              value={option.value}
+              checked={selectedValue === option.value} // bind to state
+              onChange={(event) => setSelectedValue(event.target.value)} // update state on change
+            />
+            {option.label}
+          </label>
+        </li>
+        ))}
+      </div>) : (<div></div>)}
     </div>
   );
 }

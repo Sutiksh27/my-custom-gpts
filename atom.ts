@@ -5,6 +5,7 @@ import { Run } from "openai/resources/beta/threads/runs/runs.mjs";
 import { Thread } from "openai/resources/beta/threads/threads.mjs";
 
 export const assistantAtom = atom<Assistant | null>(null);
+export const assistantsAtom = atom<Assistant[]>([]);
 export const fileAtom = atom<string | null>(null);
 export const assistantFileAtom = atom<string | null>(null);
 export const threadAtom = atom<Thread | null>(null);
